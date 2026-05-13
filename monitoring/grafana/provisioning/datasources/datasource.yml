@@ -1,0 +1,23 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+
+  - name: PostgreSQL
+    uid: postgres-babyfoot
+    type: postgres
+    url: db:5432
+    database: babyfoot
+    user: baby
+    secureJsonData:
+      password: baby
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1500
+      timescaledb: false
+    editable: true

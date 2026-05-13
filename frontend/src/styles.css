@@ -1,0 +1,338 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #e2e8f0;
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  border-bottom: 1px solid #334155;
+  padding-bottom: 16px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.topbar nav {
+  display: flex;
+  gap: 14px;
+}
+
+.topbar nav a {
+  color: #94a3b8;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all .2s;
+}
+
+.topbar nav a:hover { color: #fff; background: #1e293b; }
+.topbar nav a.active { background: #2563eb; color: #fff; }
+
+.card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+}
+
+.card h2 { margin-top: 0; }
+
+.form {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.form input {
+  flex: 1;
+  min-width: 200px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #475569;
+  background: #0f172a;
+  color: #fff;
+  font-size: 16px;
+}
+
+.form .vs {
+  font-weight: bold;
+  color: #f59e0b;
+}
+
+button {
+  cursor: pointer;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid #475569;
+  background: #334155;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all .15s;
+}
+
+button:hover { background: #475569; }
+button.primary { background: #2563eb; border-color: #2563eb; }
+button.primary:hover { background: #1d4ed8; }
+button.danger { background: #dc2626; border-color: #dc2626; }
+button.danger:hover { background: #b91c1c; }
+button.small { padding: 6px 10px; font-size: 12px; }
+
+.scoreboard {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 24px;
+  align-items: center;
+  margin: 28px 0;
+}
+
+.team {
+  text-align: center;
+  padding: 20px;
+  background: #0f172a;
+  border-radius: 12px;
+  border: 1px solid #334155;
+}
+
+.team h3 {
+  margin: 0 0 12px 0;
+  color: #f59e0b;
+  font-size: 22px;
+}
+
+.score {
+  font-size: 96px;
+  font-weight: 800;
+  line-height: 1;
+  margin: 12px 0;
+  color: #fff;
+  text-shadow: 0 4px 12px rgba(37,99,235,.4);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.separator {
+  font-size: 32px;
+  font-weight: bold;
+  color: #64748b;
+}
+
+.history {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.history th, .history td {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid #334155;
+}
+
+.history th {
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.badge.live { background: #16a34a; }
+.badge.finished { background: #475569; }
+
+/* Badge LIVE dans le titre du match en cours */
+.live-badge {
+  font-size: 14px;
+  font-weight: 700;
+  color: #4ade80;
+  animation: pulse-live 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* Flash vert sur la colonne équipe quand un but est marqué */
+@keyframes goal-flash {
+  0%   { background: #16a34a; transform: scale(1.04); box-shadow: 0 0 32px rgba(22,163,74,.7); }
+  60%  { background: #15803d; transform: scale(1.02); }
+  100% { background: #0f172a; transform: scale(1); box-shadow: none; }
+}
+
+.team.goal {
+  animation: goal-flash 0.8s ease-out forwards;
+}
+
+/* ── Page de connexion ───────────────────────────── */
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.4);
+  text-align: center;
+}
+
+.login-logo { font-size: 52px; margin-bottom: 8px; }
+.login-title { margin: 0 0 4px; font-size: 26px; }
+.login-subtitle { color: #64748b; margin: 0 0 28px; font-size: 14px; }
+
+.login-tabs {
+  display: flex;
+  background: #0f172a;
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 24px;
+  gap: 4px;
+}
+
+.login-tabs button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  border-radius: 7px;
+  padding: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all .2s;
+}
+
+.login-tabs button.active {
+  background: #2563eb;
+  color: #fff;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+}
+
+.login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.login-form input {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #475569;
+  background: #0f172a;
+  color: #fff;
+  font-size: 15px;
+}
+
+.login-submit {
+  margin-top: 4px;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.login-submit:disabled { opacity: .6; cursor: not-allowed; }
+
+/* ── Topbar — utilisateur connecté ──────────────── */
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-username {
+  font-size: 14px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.logout-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  background: transparent;
+  border: 1px solid #475569;
+  color: #94a3b8;
+}
+.logout-btn:hover { background: #1e293b; color: #fff; }
+
+/* ── Match — créateur ───────────────────────────── */
+.match-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.match-header h2 { margin: 0; }
+
+.created-by {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.creator-hint {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 20px;
+}
+
+/* ── Historique — chip créateur ─────────────────── */
+.creator-chip {
+  font-size: 12px;
+  background: #1e3a5f;
+  color: #93c5fd;
+  padding: 3px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.error {
+  background: #7f1d1d;
+  color: #fecaca;
+  padding: 10px 14px;
+  border-radius: 8px;
+}

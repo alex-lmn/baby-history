@@ -1,0 +1,128 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: baby-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-babyfoot}
+      POSTGRES_USER: ${DB_USER:-baby}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-baby}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - baby-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-baby} -d ${DB_NAME:-babyfoot}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: baby-backend
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-babyfoot}
+      DB_USER: ${DB_USER:-baby}
+      DB_PASSWORD: ${DB_PASSWORD:-baby}
+      OTEL_SERVICE_NAME: baby-backend
+      OTEL_PROM_PORT: 9464
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - baby-net
+
+  frontend:
+    build: ./frontend
+    container_name: baby-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - baby-net
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: baby-nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - baby-net
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: baby-nginx-exporter
+    restart: unless-stopped
+    command:
+      - -nginx.scrape-uri=http://nginx/stub_status
+    depends_on:
+      - nginx
+    networks:
+      - baby-net
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: baby-postgres-exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${DB_USER:-baby}:${DB_PASSWORD:-baby}@db:5432/${DB_NAME:-babyfoot}?sslmode=disable"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - baby-net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: baby-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prom_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    depends_on:
+      - backend
+    networks:
+      - baby-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: baby-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - baby-net
+
+volumes:
+  db_data:
+  prom_data:
+  grafana_data:
+
+networks:
+  baby-net:
+    driver: bridge

@@ -1,0 +1,172 @@
+{
+  "id": null,
+  "uid": "matches-history",
+  "title": "Matchs — Historique temps réel",
+  "tags": ["baby-foot", "sql"],
+  "timezone": "browser",
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "version": 1,
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Total parties jouées",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "postgres-babyfoot" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "value": null, "color": "blue" }] }
+        }
+      },
+      "targets": [{
+        "rawSql": "SELECT COUNT(*) AS value FROM matches",
+        "format": "table",
+        "refId": "A"
+      }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "textMode": "value_and_name" }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Parties en cours",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "postgres-babyfoot" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "value": null, "color": "green" }, { "value": 1, "color": "green" }] }
+        }
+      },
+      "targets": [{
+        "rawSql": "SELECT COUNT(*) AS value FROM matches WHERE status = 'live'",
+        "format": "table",
+        "refId": "A"
+      }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "textMode": "value_and_name" }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Total buts marqués",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "postgres-babyfoot" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "value": null, "color": "orange" }] }
+        }
+      },
+      "targets": [{
+        "rawSql": "SELECT COALESCE(SUM(score_a + score_b), 0) AS value FROM matches",
+        "format": "table",
+        "refId": "A"
+      }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "textMode": "value_and_name" }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Durée moy. d'une partie (min)",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "postgres-babyfoot" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 1,
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "value": null, "color": "purple" }] }
+        }
+      },
+      "targets": [{
+        "rawSql": "SELECT ROUND(AVG(EXTRACT(EPOCH FROM (finished_at - started_at)) / 60)::numeric, 1) AS value FROM matches WHERE status = 'finished' AND finished_at IS NOT NULL",
+        "format": "table",
+        "refId": "A"
+      }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "textMode": "value_and_name" }
+    },
+    {
+      "id": 5,
+      "type": "table",
+      "title": "Dernières parties (20 max)",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 14 },
+      "datasource": { "type": "postgres", "uid": "postgres-babyfoot" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "left" } },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Statut" },
+            "properties": [{
+              "id": "custom.displayMode",
+              "value": "color-background"
+            }, {
+              "id": "mappings",
+              "value": [
+                { "type": "value", "options": { "En direct": { "color": "green", "index": 0 }, "Terminé": { "color": "blue", "index": 1 } } }
+              ]
+            }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Score" },
+            "properties": [{ "id": "custom.width", "value": 100 }, { "id": "custom.align", "value": "center" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "ID" },
+            "properties": [{ "id": "custom.width", "value": 60 }]
+          }
+        ]
+      },
+      "targets": [{
+        "rawSql": "SELECT\n  id AS \"ID\",\n  team_a AS \"Équipe A\",\n  score_a || ' - ' || score_b AS \"Score\",\n  team_b AS \"Équipe B\",\n  CASE status\n    WHEN 'live' THEN 'En direct'\n    ELSE 'Terminé'\n  END AS \"Statut\",\n  CASE\n    WHEN status = 'finished' AND score_a > score_b THEN team_a\n    WHEN status = 'finished' AND score_b > score_a THEN team_b\n    WHEN status = 'finished' THEN 'Égalité'\n    ELSE '—'\n  END AS \"Vainqueur\",\n  TO_CHAR(started_at, 'DD/MM/YYYY HH24:MI') AS \"Début\",\n  COALESCE(TO_CHAR(finished_at, 'HH24:MI'), '—') AS \"Fin\",\n  CASE\n    WHEN finished_at IS NOT NULL THEN\n      CONCAT(EXTRACT(MINUTE FROM (finished_at - started_at))::int, ' min')\n    ELSE '—'\n  END AS \"Durée\"\nFROM matches\nORDER BY started_at DESC\nLIMIT 20",
+        "format": "table",
+        "refId": "A"
+      }],
+      "options": {
+        "sortBy": [{ "displayName": "Début", "desc": true }],
+        "footer": { "show": false }
+      }
+    },
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Classement des équipes (parties terminées)",
+      "gridPos": { "x": 0, "y": 18, "w": 12, "h": 10 },
+      "datasource": { "type": "postgres", "uid": "postgres-babyfoot" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "left" } },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Victoires" },
+            "properties": [{ "id": "custom.displayMode", "value": "color-background" }, { "id": "thresholds", "value": { "steps": [{ "value": null, "color": "blue" }, { "value": 3, "color": "green" }] } }]
+          }
+        ]
+      },
+      "targets": [{
+        "rawSql": "SELECT\n  equipe AS \"Équipe\",\n  COUNT(*) AS \"Parties\",\n  SUM(CASE WHEN gagnant THEN 1 ELSE 0 END) AS \"Victoires\",\n  SUM(CASE WHEN NOT gagnant THEN 1 ELSE 0 END) AS \"Défaites\",\n  ROUND(SUM(CASE WHEN gagnant THEN 1 ELSE 0 END)::numeric / NULLIF(COUNT(*), 0) * 100, 0) || '%' AS \"Win rate\",\n  SUM(buts_pour) AS \"Buts pour\",\n  SUM(buts_contre) AS \"Buts contre\"\nFROM (\n  SELECT team_a AS equipe,\n    score_a > score_b AS gagnant,\n    score_a AS buts_pour,\n    score_b AS buts_contre\n  FROM matches WHERE status = 'finished'\n  UNION ALL\n  SELECT team_b,\n    score_b > score_a,\n    score_b,\n    score_a\n  FROM matches WHERE status = 'finished'\n) t\nGROUP BY equipe\nORDER BY \"Victoires\" DESC, \"Buts pour\" DESC",
+        "format": "table",
+        "refId": "A"
+      }],
+      "options": { "footer": { "show": false } }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Parties jouées par heure",
+      "gridPos": { "x": 12, "y": 18, "w": 12, "h": 10 },
+      "datasource": { "type": "postgres", "uid": "postgres-babyfoot" },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "custom": { "lineWidth": 2, "fillOpacity": 20, "drawStyle": "bars" } }
+      },
+      "targets": [{
+        "rawSql": "SELECT\n  DATE_TRUNC('hour', started_at) AS time,\n  COUNT(*) AS \"Parties\"\nFROM matches\nWHERE started_at >= NOW() - INTERVAL '24 hours'\nGROUP BY 1\nORDER BY 1",
+        "format": "time_series",
+        "refId": "A"
+      }]
+    }
+  ]
+}

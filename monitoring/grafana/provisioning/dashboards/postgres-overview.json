@@ -1,0 +1,144 @@
+{
+  "id": null,
+  "uid": "postgres-overview",
+  "title": "PostgreSQL — Baby Foot",
+  "tags": ["postgres", "baby-foot"],
+  "timezone": "browser",
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "version": 1,
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "PostgreSQL en ligne",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "EN LIGNE", "color": "green" }, "0": { "text": "HORS LIGNE", "color": "red" } } }
+          ],
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "value": null, "color": "red" }, { "value": 1, "color": "green" }] }
+        }
+      },
+      "targets": [{ "expr": "pg_up", "legendFormat": "" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "value", "colorMode": "background" }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Connexions actives",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "value": null, "color": "blue" }, { "value": 10, "color": "yellow" }, { "value": 50, "color": "red" }] },
+          "unit": "short"
+        }
+      },
+      "targets": [{ "expr": "sum(pg_stat_database_numbackends{datname=\"babyfoot\"})", "legendFormat": "" }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "value_and_name", "colorMode": "background" }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Cache hit ratio",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "value": null, "color": "red" }, { "value": 0.9, "color": "yellow" }, { "value": 0.99, "color": "green" }] }
+        }
+      },
+      "targets": [{
+        "expr": "pg_stat_database_blks_hit{datname=\"babyfoot\"} / clamp_min(pg_stat_database_blks_hit{datname=\"babyfoot\"} + pg_stat_database_blks_read{datname=\"babyfoot\"}, 1)",
+        "legendFormat": ""
+      }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "value_and_name", "colorMode": "background" }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Total matchs en base",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{ "value": null, "color": "blue" }] }
+        }
+      },
+      "targets": [{
+        "expr": "pg_stat_user_tables_n_live_tup{relname=\"matches\"}",
+        "legendFormat": ""
+      }],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "textMode": "value_and_name", "colorMode": "background" }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Transactions / seconde",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "ops", "custom": { "lineWidth": 2, "fillOpacity": 15 } }
+      },
+      "targets": [
+        { "expr": "rate(pg_stat_database_xact_commit{datname=\"babyfoot\"}[1m])", "legendFormat": "Commits/s" },
+        { "expr": "rate(pg_stat_database_xact_rollback{datname=\"babyfoot\"}[1m])", "legendFormat": "Rollbacks/s" }
+      ],
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Activité lignes (INSERT / UPDATE / DELETE)",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "ops", "custom": { "lineWidth": 2, "fillOpacity": 15 } }
+      },
+      "targets": [
+        { "expr": "rate(pg_stat_database_tup_inserted{datname=\"babyfoot\"}[1m])", "legendFormat": "Inserts/s" },
+        { "expr": "rate(pg_stat_database_tup_updated{datname=\"babyfoot\"}[1m])", "legendFormat": "Updates/s" },
+        { "expr": "rate(pg_stat_database_tup_deleted{datname=\"babyfoot\"}[1m])", "legendFormat": "Deletes/s" }
+      ],
+      "options": { "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Connexions actives (historique)",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "short", "custom": { "lineWidth": 2, "fillOpacity": 20 } }
+      },
+      "targets": [
+        { "expr": "pg_stat_database_numbackends{datname=\"babyfoot\"}", "legendFormat": "Connexions" }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Lectures : cache vs disque",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "ops", "custom": { "lineWidth": 2, "fillOpacity": 15 } }
+      },
+      "targets": [
+        { "expr": "rate(pg_stat_database_blks_hit{datname=\"babyfoot\"}[1m])", "legendFormat": "Cache (blks_hit/s)" },
+        { "expr": "rate(pg_stat_database_blks_read{datname=\"babyfoot\"}[1m])", "legendFormat": "Disque (blks_read/s)" }
+      ],
+      "options": { "tooltip": { "mode": "multi" } }
+    }
+  ]
+}
