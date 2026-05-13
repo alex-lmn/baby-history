@@ -1,113 +1,151 @@
-# ⚽ Baby-Foot — Score & Historique
+# Baby-History
 
-Application web conteneurisée pour gérer des matchs de baby-foot :
-- **Interface "Match en direct"** : créer une partie, modifier le score en temps réel
-- **Interface "Historique"** : consulter les parties précédentes (vainqueur, score, dates)
+Application web de gestion de matchs de baby-foot avec suivi en direct, historique, authentification utilisateur et observabilite.
 
-## 🧱 Stack
+## Fonctionnalites
 
-| Couche         | Techno                  |
-|----------------|-------------------------|
-| Frontend       | React 18 + Vite         |
-| Backend        | Node.js + Express       |
-| Base de données| PostgreSQL 15           |
-| Reverse proxy  | Nginx                   |
-| Conteneurs     | Docker + Docker Compose |
+- Connexion et inscription utilisateur (JWT)
+- Match en direct (creation de match, mise a jour du score)
+- Historique des matchs
+- Fin de match et suppression
+- API REST backend Node.js/Express
+- Base PostgreSQL
+- Reverse proxy Nginx
+- Observabilite avec Prometheus et Grafana
+- Export de metriques backend, PostgreSQL et Nginx
 
-## 🗂️ Architecture
+## Stack technique
 
-```
-                 +-----------+
-   Browser  -->  |   NGINX   |  :8080
-                 +-----+-----+
-                       |
-        +--------------+--------------+
-        |                             |
-   +----+-----+                 +-----+------+
-   | Frontend |                 |  Backend   |
-   |  React   |                 |  Express   |
-   +----------+                 +-----+------+
-                                      |
-                                +-----+------+
-                                | PostgreSQL |
-                                +------------+
-```
+- Frontend: React 18 + Vite
+- Backend: Node.js + Express
+- Base de donnees: PostgreSQL 15
+- Proxy: Nginx
+- Observabilite: OpenTelemetry, prom-client, Prometheus, Grafana
+- Conteneurisation: Docker, Docker Compose
 
-## 🚀 Démarrage
+## Architecture
 
-Prérequis : **Docker Desktop** + **Git Bash** (ou PowerShell).
+- frontend: interface React servie par Nginx interne
+- backend: API Express sur le port 3001 (interne)
+- db: PostgreSQL avec volume persistant
+- nginx: point d'entree externe sur http://localhost:8080
+- prometheus: collecte de metriques sur http://localhost:9090
+- grafana: visualisation sur http://localhost:3000
+- exporters:
+  - nginx-prometheus-exporter
+  - postgres-exporter
+
+## Demarrage
+
+Prerequis:
+
+- Docker Desktop
+
+Lancement:
 
 ```bash
-# 1. Cloner
-git clone <URL_DU_PROJET>
-cd baby-history
-
-# 2. (optionnel) personnaliser les variables d'env
-cp .env.example .env
-
-# 3. Lancer
 docker compose up -d --build
 ```
 
-Accès :
-- 🌐 Application : http://localhost:8080
-- 🔌 API directe : http://localhost:8080/api/health
-
-## 📡 Endpoints API
-
-| Méthode | Route                          | Description                       |
-|---------|--------------------------------|-----------------------------------|
-| GET     | `/api/health`                  | Healthcheck                       |
-| GET     | `/api/matches`                 | Liste de tous les matchs          |
-| GET     | `/api/matches/current`         | Match `live` en cours             |
-| GET     | `/api/matches/:id`             | Détail d'un match                 |
-| POST    | `/api/matches`                 | Crée un match (body: team_a, team_b) |
-| PATCH   | `/api/matches/:id/score`       | Met à jour le score (score_a, score_b) |
-| POST    | `/api/matches/:id/finish`      | Termine le match                  |
-| DELETE  | `/api/matches/:id`             | Supprime un match                 |
-
-## 🛠️ Commandes utiles
+Arret:
 
 ```bash
-# Suivre les logs
-docker compose logs -f
+docker compose down
+```
 
-# Reconstruire après modif
-docker compose build --no-cache
-docker compose up -d
+Arret complet avec suppression des volumes:
 
-# Stopper et tout nettoyer (⚠️ supprime le volume PostgreSQL)
+```bash
 docker compose down -v
-
-# Accéder à la base
-docker exec -it baby-db psql -U baby -d babyfoot
 ```
 
-## 📁 Structure
+## URLs utiles
 
-```
+- Application: http://localhost:8080
+- API healthcheck: http://localhost:8080/api/health
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3000
+
+## Authentification
+
+Routes disponibles:
+
+- POST /api/auth/register
+- POST /api/auth/login
+- GET /api/auth/me
+
+Le token JWT est envoye via l'en-tete Authorization: Bearer <token>.
+
+## API matchs
+
+- GET /api/matches
+- GET /api/matches/current
+- GET /api/matches/:id
+- POST /api/matches (auth requis)
+- PATCH /api/matches/:id/score
+- POST /api/matches/:id/finish
+- DELETE /api/matches/:id
+
+## Variables d'environnement principales
+
+Configurees via docker-compose.yml (avec valeurs par defaut):
+
+- DB_NAME
+- DB_USER
+- DB_PASSWORD
+- JWT_SECRET
+- GRAFANA_USER
+- GRAFANA_PASSWORD
+- OTEL_SERVICE_NAME
+- OTEL_PROM_PORT
+
+## Monitoring
+
+Prometheus scrape:
+
+- backend OTel: backend:9464/metrics
+- backend prom-client: backend:3001/metrics
+- postgres exporter: postgres-exporter:9187
+- nginx exporter: nginx-exporter:9113
+- prometheus: localhost:9090
+
+Dashboards Grafana provisionnes dans monitoring/grafana/provisioning.
+
+## Structure du projet
+
+```text
 baby-history/
-├── backend/              # API Node/Express
-│   ├── server.js
-│   ├── db.js
-│   ├── package.json
-│   └── Dockerfile
-├── frontend/             # SPA React/Vite
-│   ├── src/
-│   ├── index.html
-│   ├── package.json
-│   ├── nginx.conf        # nginx interne (serveur statique SPA)
-│   └── Dockerfile        # build multi-stage
-├── nginx/
-│   └── nginx.conf        # reverse proxy (front + /api)
-├── docker-compose.yml
-├── .env.example
-└── README.md
+  backend/
+    auth.js
+    db.js
+    otel.js
+    server.js
+    Dockerfile
+    package.json
+  frontend/
+    src/
+      context/
+      pages/
+      api.js
+      App.jsx
+      auth.js
+      main.jsx
+      styles.css
+    index.html
+    nginx.conf
+    vite.config.js
+    Dockerfile
+    package.json
+  monitoring/
+    prometheus.yml
+    grafana/provisioning/
+  nginx/
+    nginx.conf
+  docker-compose.yml
+  README.md
 ```
 
-## 🧩 Évolutions prévues (J3 / J4)
+## Auteurs
 
-- Volumes nommés ✅
-- Réseau dédié ✅
-- Reverse proxy Nginx ✅
-- Monitoring Prometheus + Grafana (à venir)
+Josset Antoine
+Lemoine Alex
