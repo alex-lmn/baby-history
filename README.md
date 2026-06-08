@@ -1,6 +1,7 @@
 # Baby-History
 
 Application web de gestion de matchs de baby-foot avec suivi en direct, historique, authentification utilisateur et observabilite.
+![alt text](image.png)
 
 ## Fonctionnalites
 
