@@ -16,15 +16,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    deploy:
-      resources:
-        limits:
-          memory: 512m
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   backend:
     build: ./backend
@@ -51,15 +42,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
-    deploy:
-      resources:
-        limits:
-          memory: 256m
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   frontend:
     build: ./frontend
@@ -75,15 +57,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 5s
-    deploy:
-      resources:
-        limits:
-          memory: 64m
-    logging:
-      driver: json-file
-      options:
-        max-size: "5m"
-        max-file: "2"
 
   nginx:
     image: nginx:1.27-alpine
@@ -106,15 +79,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 5s
-    deploy:
-      resources:
-        limits:
-          memory: 64m
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   nginx-exporter:
     image: nginx/nginx-prometheus-exporter:1.1.0
@@ -127,15 +91,6 @@ services:
         condition: service_healthy
     networks:
       - baby-net
-    deploy:
-      resources:
-        limits:
-          memory: 32m
-    logging:
-      driver: json-file
-      options:
-        max-size: "5m"
-        max-file: "2"
 
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:v0.15.0
@@ -148,15 +103,6 @@ services:
         condition: service_healthy
     networks:
       - baby-net
-    deploy:
-      resources:
-        limits:
-          memory: 64m
-    logging:
-      driver: json-file
-      options:
-        max-size: "5m"
-        max-file: "2"
 
   prometheus:
     image: prom/prometheus:v2.53.0
@@ -178,15 +124,6 @@ services:
       - backend
     networks:
       - baby-net
-    deploy:
-      resources:
-        limits:
-          memory: 512m
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   grafana:
     image: grafana/grafana:11.1.0
@@ -205,15 +142,6 @@ services:
       - prometheus
     networks:
       - baby-net
-    deploy:
-      resources:
-        limits:
-          memory: 256m
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
 
 volumes:
   db_data:
