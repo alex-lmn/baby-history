@@ -10,7 +10,8 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     networks:
-      - baby-net
+      - baby-app
+      - baby-monitoring
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-baby} -d ${DB_NAME:-babyfoot}"]
       interval: 5s
@@ -35,7 +36,8 @@ services:
       db:
         condition: service_healthy
     networks:
-      - baby-net
+      - baby-app
+      - baby-monitoring
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3001/api/health || exit 1"]
       interval: 10s
@@ -50,7 +52,7 @@ services:
     depends_on:
       - backend
     networks:
-      - baby-net
+      - baby-app
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/ || exit 1"]
       interval: 10s
@@ -72,7 +74,7 @@ services:
       backend:
         condition: service_healthy
     networks:
-      - baby-net
+      - baby-app
     healthcheck:
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/health || exit 1"]
       interval: 10s
@@ -90,7 +92,8 @@ services:
       nginx:
         condition: service_healthy
     networks:
-      - baby-net
+      - baby-app
+      - baby-monitoring
 
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:v0.15.0
@@ -102,7 +105,8 @@ services:
       db:
         condition: service_healthy
     networks:
-      - baby-net
+      - baby-app
+      - baby-monitoring
 
   prometheus:
     image: prom/prometheus:v2.53.0
@@ -123,7 +127,7 @@ services:
       - postgres-exporter
       - backend
     networks:
-      - baby-net
+      - baby-monitoring
 
   grafana:
     image: grafana/grafana:11.1.0
@@ -141,7 +145,7 @@ services:
     depends_on:
       - prometheus
     networks:
-      - baby-net
+      - baby-monitoring
 
 volumes:
   db_data:
@@ -149,5 +153,7 @@ volumes:
   grafana_data:
 
 networks:
-  baby-net:
+  baby-app:
+    driver: bridge
+  baby-monitoring:
     driver: bridge
