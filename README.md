@@ -39,7 +39,8 @@ Application web de gestion de matchs de baby-foot avec suivi en direct, historiq
 
 Prerequis:
 
-- Docker Desktop
+- Docker
+- Il faut mettre en place les variables d'environnements présent dans le .env.example
 
 Lancement:
 
